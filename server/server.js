@@ -12,10 +12,10 @@ class Server {
         
         this.dbConnection();
 
-        this.app.use(express.static(path.join(__dirname,'..','dist')));
+        this.app.use(express.static(path.join(__dirname,'..','public')));
 
         this.app.use((req, res) => {
-            res.sendFile(path.resolve(__dirname, '../dist/index.html'));
+            res.sendFile(path.resolve(__dirname, '../public/index.html'));
         });
         /*this.app.get(
             '/', (req, res) => {
