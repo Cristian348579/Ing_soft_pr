@@ -1,0 +1,24 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/clientes/perfil"
+method: PUT
+headers:
+  x-token: "{{json_web_token_0daq}}"
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Samuel\",\r
+
+    \  \"apellido\": \"Zambrano\",\r
+
+    \  \"id_ciudad\": 3,\r
+
+    \  \"id_barrio\": 38,\r
+
+    \  \"direccion\": \"Calle 60 # 95c-07 Apto 402\",\r
+
+    \  \"informacion_complementaria\": \"Conjunto residencial Jade, timbre averiado\"\r
+
+    }"
+order: 9000

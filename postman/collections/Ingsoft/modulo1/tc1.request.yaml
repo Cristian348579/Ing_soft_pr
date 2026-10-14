@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/usuarios/registro"
+method: POST
+body:
+  type: json
+  content: |-
+    {
+      "nombre": "Samuel",
+      "apellido": "Zambrano",
+      "correo_electronico": "samuel.nuevo@uao.edu.co",
+      "contrasena": "Password123!",
+      "rol": "cliente",
+      "id_ciudad": 3,
+      "id_barrio": 38,
+      "direccion": "Calle 60 # 95c-07",
+      "informacion_complementaria": "Conjunto residencial Jade"
+    }
+order: 1000

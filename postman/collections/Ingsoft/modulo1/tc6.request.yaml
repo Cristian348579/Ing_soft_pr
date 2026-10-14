@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/recuperacion/solicitar"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"correo_electronico\": \"samuel.zambrano@uao.edu.co\"\r
+
+    }"
+order: 8000

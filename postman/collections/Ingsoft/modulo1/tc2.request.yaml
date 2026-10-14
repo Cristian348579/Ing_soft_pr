@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/usuarios/registro"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Samuel\",\r
+
+    \  \"apellido\": \"Zambrano\",\r
+
+    \  \"correo_electronico\": \"samuel.zambrano@uao.edu.co\",\r
+
+    \  \"contrasena\": \"Password123!\",\r
+
+    \  \"rol\": \"cliente\",\r
+
+    \  \"id_ciudad\": 3,\r
+
+    \  \"id_barrio\": 38,\r
+
+    \  \"direccion\": \"Calle 60 # 95c-07\",\r
+
+    \  \"informacion_complementaria\": \"Conjunto residencial Jade\"\r
+
+    }"
+order: 7000

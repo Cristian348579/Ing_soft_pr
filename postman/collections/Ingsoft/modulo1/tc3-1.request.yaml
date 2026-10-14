@@ -1,0 +1,23 @@
+$kind: http-request
+name: tc3
+url: "{{baseUrl}}/usuarios/registro"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Brayan\",\r
+
+    \  \"apellido\": \"Valencia\",\r
+
+    \  \"correo_electronico\": \"brayan.nuevo@gmail.com\",\r
+
+    \  \"contrasena\": \"Password123!\",\r
+
+    \  \"rol\": \"proveedor\",\r
+
+    \  \"descripcion_perfil\": \"Especialista en masajes descontracturantes y
+    estética corporal\"\r
+
+    }"
+order: 5000

@@ -1,0 +1,9 @@
+name: New Environment
+values:
+  - key: baseUrl
+    value: ''
+  - key: token_cliente
+    value: ''
+  - key: token_proveedor
+    value: ''
+color: 0

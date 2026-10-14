@@ -1,0 +1,7 @@
+$kind: http-request
+description: ""
+url: "{{baseUrl}}/clientes/perfil"
+method: GET
+headers:
+  x-token: "{{json_web_token_0v9p}}"
+order: 10000

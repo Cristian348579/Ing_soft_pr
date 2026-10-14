@@ -1,0 +1,14 @@
+$kind: http-request
+name: tc4
+url: "{{baseUrl}}/usuarios/login"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"correo_electronico\": \"brayansvm1212@gmail.com\",\r
+
+    \  \"contrasena\": \"12345678\"\r
+
+    }"
+order: 3000

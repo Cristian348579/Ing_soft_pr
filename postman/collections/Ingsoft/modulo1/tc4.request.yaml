@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/usuarios/login"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"correo_electronico\": \"samuel.nuevo@uao.edu.co\",\r
+
+    \  \"contrasena\": \"Password123!\"\r
+
+    }"
+order: 4000

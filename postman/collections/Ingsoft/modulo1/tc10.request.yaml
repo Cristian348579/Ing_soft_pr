@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/servicios"
+method: POST
+headers:
+  x-token: "{{json_web_token_0xza}}"
+body:
+  type: json
+  content: "{\r
+
+    \  \"nombre\": \"Masaje Relajante y Descontracturante\",\r
+
+    \  \"categoria\": \"Masajes\",\r
+
+    \  \"descripcion\": \"Sesión corporal completa de 60 minutos con esencias naturales\",\r
+
+    \  \"duracion_minutos\": 60,\r
+
+    \  \"precio\": 80000,\r
+
+    \  \"estado\": \"A\"\r
+
+    }"
+order: 13000

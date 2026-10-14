@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/proveedores/zonas"
+method: POST
+headers:
+  x-token: "{{json_web_token_0xza}}"
+body:
+  type: json
+  content: "{\r
+
+    \  \"id_ciudad\": 3,\r
+
+    \  \"id_barrio\": 39\r
+
+    }"
+order: 11000
