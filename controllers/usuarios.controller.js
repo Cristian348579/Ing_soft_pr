@@ -3,10 +3,10 @@ const { bdMySQL } = require('../database/db_conection');
 const Usuario = require('../models/usuario');
 const Cliente = require('../models/cliente');
 const Proveedor = require('../models/proveedor');
+const Barrio = require('../models/barrio');
 const { generarJWT } = require('../helpers/generar-jwt');
 
 const registrarUsuario = async (req, res) => {
-   
     const { 
         correo_electronico, 
         contrasena, 
@@ -15,7 +15,7 @@ const registrarUsuario = async (req, res) => {
         apellido, 
         direccion, 
         descripcion_perfil,
-        id_ciudad,
+        id_comuna,
         id_barrio,
         informacion_complementaria
     } = req.body;
@@ -25,6 +25,22 @@ const registrarUsuario = async (req, res) => {
     const t = await bdMySQL.transaction();
 
     try {
+        const existeEmail = await Usuario.findOne({ where: { correo_electronico } });
+        if (existeEmail) {
+            await t.rollback();
+            return res.status(400).json({ msg: 'El correo electrónico ya está registrado' });
+        }
+
+        if (rolFormateado === 'C') {
+            const barrioValido = await Barrio.findOne({
+                where: { id_barrio, id_comuna }
+            });
+            if (!barrioValido) {
+                await t.rollback();
+                return res.status(400).json({ msg: 'El barrio seleccionado no pertenece a la comuna indicada' });
+            }
+        }
+
         const salt = bcrypt.genSaltSync(10);
         const contrasena_hash = bcrypt.hashSync(contrasena, salt);
 
@@ -39,14 +55,13 @@ const registrarUsuario = async (req, res) => {
         if (rolFormateado === 'C') {
             await Cliente.create({ 
                 id_cliente: usuario.id_usuario, 
-                id_ciudad,
+                id_comuna,
                 id_barrio,
                 direccion,
-                informacion_complementaria
+                informacion_complementaria: informacion_complementaria || null
             }, { transaction: t });
 
         } else if (rolFormateado === 'P') {
-            // Inserción en Proveedor[cite: 3]
             await Proveedor.create({ 
                 id_proveedor: usuario.id_usuario, 
                 descripcion_perfil 
@@ -57,14 +72,24 @@ const registrarUsuario = async (req, res) => {
         }
 
         await t.commit();
-        res.status(201).json({ msg: 'Usuario registrado satisfactoriamente', usuario });
+        res.status(201).json({ 
+            ok: true,
+            msg: 'Usuario registrado satisfactoriamente', 
+            usuario: {
+                id_usuario: usuario.id_usuario,
+                correo_electronico: usuario.correo_electronico,
+                rol: usuario.rol,
+                nombre: usuario.nombre,
+                apellido: usuario.apellido
+            }
+        });
 
     } catch (error) {
         await t.rollback();
-        console.log(error);
+        console.error('Error al registrar usuario:', error);
         res.status(500).json({ msg: 'Error al registrar el usuario' });
     }
-}
+};
 
 const login = async (req, res) => {
     const { correo_electronico, contrasena } = req.body;
@@ -83,20 +108,22 @@ const login = async (req, res) => {
         const token = await generarJWT(usuario.id_usuario, usuario.rol);
 
         res.json({
+            ok: true,
             msg: 'Inicio de sesión exitoso',
             usuario: {
                 id_usuario: usuario.id_usuario,
                 rol: usuario.rol,
-                nombre: usuario.nombre
+                nombre: usuario.nombre,
+                apellido: usuario.apellido
             },
             token
         });
 
     } catch (error) {
-        console.log(error);
+        console.error('Error en login:', error);
         res.status(500).json({ msg: 'Hable con el administrador' });
     }
-}
+};
 
 module.exports = {
     registrarUsuario,

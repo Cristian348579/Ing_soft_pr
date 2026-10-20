@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { bdMySQL } = require('../database/db_conection');
 
-const Ciudad = bdMySQL.define('Ciudad', {
-    id_ciudad: {
+const Comuna = bdMySQL.define('Comuna', {
+    id_comuna: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -13,8 +13,8 @@ const Ciudad = bdMySQL.define('Ciudad', {
         unique: true
     }
 }, {
-    tableName: 'CIUDAD',
+    tableName: 'COMUNA',
     timestamps: false
 });
 
-module.exports = Ciudad;
+module.exports = Comuna;

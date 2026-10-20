@@ -2,7 +2,7 @@ const Servicio = require('../models/servicio');
 const Proveedor = require('../models/proveedor');
 const Usuario = require('../models/usuario');
 const ZonaAtencion = require('../models/zonaAtencion');
-const Ciudad = require('../models/ciudad');
+const Comuna = require('../models/comuna');
 const Barrio = require('../models/barrio');
 const Recurso = require('../models/recurso');
 
@@ -44,7 +44,6 @@ const listarServiciosCatalogo = async (req, res) => {
     try {
         const { categoria, buscar } = req.query;
 
-        // Filtro base: solo servicios activos
         const whereClause = { estado: 'A' };
 
         if (categoria && categoria !== 'Todos') {
@@ -65,7 +64,7 @@ const listarServiciosCatalogo = async (req, res) => {
                         {
                             model: ZonaAtencion,
                             include: [
-                                { model: Ciudad, attributes: ['nombre'] },
+                                { model: Comuna, attributes: ['nombre'] },
                                 { model: Barrio, attributes: ['nombre'] }
                             ]
                         }
