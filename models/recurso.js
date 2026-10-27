@@ -20,7 +20,7 @@ const Recurso = bdMySQL.define('Recurso', {
         type: DataTypes.CHAR(1),
         allowNull: false,
         validate: {
-            isIn: [['F', 'V']] // 'F' (Foto), 'V' (Video)
+            isIn: [['F', 'V']] // 'F' para Fotografía, 'V' para Video
         }
     },
     url_archivo: {
@@ -41,7 +41,6 @@ const Recurso = bdMySQL.define('Recurso', {
     timestamps: false
 });
 
-// Definición de relaciones (1 Servicio tiene muchos Recursos)
 Servicio.hasMany(Recurso, { foreignKey: 'id_servicio', as: 'recursos', onDelete: 'CASCADE' });
 Recurso.belongsTo(Servicio, { foreignKey: 'id_servicio', as: 'servicio' });
 
