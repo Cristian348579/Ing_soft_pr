@@ -51,6 +51,8 @@ class Server {
         this.app.use('/api/ubicaciones', require('../routes/ubicaciones.route'));
         this.app.use('/api/servicios/:id/recursos', require('../routes/recursos.route'));
         this.app.use('/api/disponibilidad', require('../routes/disponibilidad.route'));
+        this.app.use('/api/solicitudes', require('../routes/solicitudes.route'));
+        
         this.app.get('/{*path}', (req, res) => {
             res.sendFile(path.resolve(__dirname, '../public/index.html'));
         });
