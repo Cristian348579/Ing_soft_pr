@@ -1,10 +1,10 @@
 const Usuario = require('../models/usuario');
 const Proveedor = require('../models/proveedor');
 const ZonaAtencion = require('../models/zonaAtencion');
-const Ciudad = require('../models/ciudad');
+const Comuna = require('../models/comuna');
 const Barrio = require('../models/barrio');
-const Servicio = require('../models/servicio')
-const Recurso = require('../models/recurso')
+const Servicio = require('../models/servicio');
+const Recurso = require('../models/recurso');
 
 const obtenerPerfilProveedor = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
@@ -18,9 +18,9 @@ const obtenerPerfilProveedor = async (req, res) => {
                 attributes: ['descripcion_perfil'],
                 include: [{
                     model: ZonaAtencion,
-                    attributes: ['id_zona', 'id_ciudad', 'id_barrio'],
+                    attributes: ['id_zona', 'id_comuna', 'id_barrio'],
                     include: [
-                        { model: Ciudad, attributes: ['nombre'] },
+                        { model: Comuna, attributes: ['nombre'] },
                         { model: Barrio, attributes: ['nombre'] }
                     ]
                 }]
@@ -42,7 +42,7 @@ const obtenerPerfilProveedor = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error(error);
+        console.error('Error al consultar perfil del proveedor:', error);
         res.status(500).json({ msg: 'Error al consultar el perfil del proveedor' });
     }
 };
@@ -62,40 +62,54 @@ const actualizarPerfilProveedor = async (req, res) => {
         await usuario.update({ nombre, apellido });
         await proveedor.update({ descripcion_perfil });
 
-        res.json({ ok: true, msg: 'Perfil profesional actualizado' });
+        res.json({
+            ok: true,
+            msg: 'Perfil profesional actualizado',
+            perfil_actualizado: { nombre, apellido, descripcion_perfil }
+        });
     } catch (error) {
-        console.error(error);
+        console.error('Error al actualizar perfil del proveedor:', error);
         res.status(500).json({ msg: 'Error al actualizar perfil' });
     }
 };
 
 const registrarZonaAtencion = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
-    const { id_ciudad, id_barrio } = req.body;
+    const { id_comuna, id_barrio } = req.body;
 
     try {
+        const barrioValido = await Barrio.findOne({
+            where: { id_barrio, id_comuna }
+        });
+        if (!barrioValido) {
+            return res.status(400).json({ msg: 'El barrio seleccionado no pertenece a la comuna indicada' });
+        }
+
         const existe = await ZonaAtencion.findOne({
             where: {
                 id_proveedor: id_usuario,
-                id_ciudad,
                 id_barrio
             }
         });
 
         if (existe) {
-            return res.status(400).json({ msg: 'Ya tienes este barrio registrado en tus zonas' });
+            return res.status(400).json({ msg: 'Ya tienes este barrio registrado en tus zonas de atención' });
         }
 
         const nuevaZona = await ZonaAtencion.create({
             id_proveedor: id_usuario,
-            id_ciudad,
+            id_comuna,
             id_barrio
         });
 
-        res.status(201).json({ ok: true, msg: 'Zona agregada correctamente', zona: nuevaZona });
+        res.status(201).json({
+            ok: true,
+            msg: 'Zona agregada correctamente',
+            zona: nuevaZona
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Error al registrar la zona' });
+        console.error('Error al registrar zona de atención:', error);
+        res.status(500).json({ msg: 'Error al registrar la zona de atención' });
     }
 };
 
@@ -115,15 +129,13 @@ const eliminarZonaAtencion = async (req, res) => {
         await zona.destroy();
         res.json({ ok: true, msg: 'Zona eliminada correctamente' });
     } catch (error) {
-        console.error(error);
+        console.error('Error al eliminar zona de atención:', error);
         res.status(500).json({ msg: 'Error al eliminar zona de atención' });
     }
 };
 
 const listarProveedores = async (req, res) => {
     try {
-        const { buscar } = req.query;
-
         const proveedores = await Proveedor.findAll({
             include: [
                 {
@@ -132,9 +144,9 @@ const listarProveedores = async (req, res) => {
                 },
                 {
                     model: ZonaAtencion,
-                    attributes: ['id_zona'],
+                    attributes: ['id_zona', 'id_comuna', 'id_barrio'],
                     include: [
-                        { model: Ciudad, attributes: ['nombre'] },
+                        { model: Comuna, attributes: ['nombre'] },
                         { model: Barrio, attributes: ['nombre'] }
                     ]
                 }
@@ -147,7 +159,9 @@ const listarProveedores = async (req, res) => {
             descripcion_perfil: p.descripcion_perfil,
             zonas: p.ZonaAtencions.map(z => ({
                 id_zona: z.id_zona,
-                ciudad: z.Ciudad?.nombre,
+                id_comuna: z.id_comuna,
+                comuna: z.Comuna?.nombre,
+                id_barrio: z.id_barrio,
                 barrio: z.Barrio?.nombre
             }))
         }));
@@ -177,9 +191,9 @@ const obtenerDetalleProveedor = async (req, res) => {
                     include: [
                         {
                             model: ZonaAtencion,
-                            attributes: ['id_zona'],
+                            attributes: ['id_zona', 'id_comuna', 'id_barrio'],
                             include: [
-                                { model: Ciudad, attributes: ['nombre'] },
+                                { model: Comuna, attributes: ['nombre'] },
                                 { model: Barrio, attributes: ['nombre'] }
                             ]
                         }
@@ -216,7 +230,9 @@ const obtenerDetalleProveedor = async (req, res) => {
                 descripcion_perfil: usuarioProveedor.Proveedor?.descripcion_perfil || '',
                 zonas: usuarioProveedor.Proveedor?.ZonaAtencions?.map(z => ({
                     id_zona: z.id_zona,
-                    ciudad: z.Ciudad?.nombre,
+                    id_comuna: z.id_comuna,
+                    comuna: z.Comuna?.nombre,
+                    id_barrio: z.id_barrio,
                     barrio: z.Barrio?.nombre
                 })) || []
             },
@@ -228,8 +244,6 @@ const obtenerDetalleProveedor = async (req, res) => {
         res.status(500).json({ msg: 'Error interno del servidor al consultar el proveedor' });
     }
 };
-
-
 
 module.exports = {
     obtenerPerfilProveedor,

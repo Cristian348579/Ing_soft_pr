@@ -120,7 +120,54 @@ const restablecerContrasena = async (req, res) => {
     }
 };
 
+const verificarToken = async (req, res) => {
+    const { token } = req.params;
+
+    try {
+        const registro = await RecuperacionCredencial.findOne({ 
+            where: { token } 
+        });
+
+        
+        if (!registro) {
+            return res.status(400).json({ 
+                ok: false, 
+                msg: 'El enlace de recuperación es inválido o no existe.' 
+            });
+        }
+
+        
+        if (registro.usado === 1) {
+            return res.status(400).json({ 
+                ok: false, 
+                msg: 'Este enlace ya fue utilizado. Solicita uno nuevo si necesitas cambiar tu clave.' 
+            });
+        }
+
+        const ahora = new Date();
+        if (ahora > registro.fecha_expiracion) {
+            return res.status(400).json({ 
+                ok: false, 
+                msg: 'El enlace de recuperación ha expirado. Por seguridad, solicita uno nuevo.' 
+            });
+        }
+
+        res.status(200).json({
+            ok: true,
+            msg: 'Enlace verificado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al verificar token:', error);
+        res.status(500).json({ 
+            ok: false, 
+            msg: 'Error interno del servidor al validar el enlace' 
+        });
+    }
+};
+
 module.exports = {
     solicitarRecuperacion,
-    restablecerContrasena
+    restablecerContrasena,
+    verificarToken
 };

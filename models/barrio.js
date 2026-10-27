@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { bdMySQL } = require('../database/db_conection');
-const Ciudad = require('./ciudad');
+const Comuna = require('./comuna');
 
 const Barrio = bdMySQL.define('Barrio', {
     id_barrio: {
@@ -8,12 +8,12 @@ const Barrio = bdMySQL.define('Barrio', {
         primaryKey: true,
         autoIncrement: true
     },
-    id_ciudad: {
+    id_comuna: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: Ciudad,
-            key: 'id_ciudad'
+            model: Comuna,
+            key: 'id_comuna'
         }
     },
     nombre: {
@@ -26,7 +26,7 @@ const Barrio = bdMySQL.define('Barrio', {
 });
 
 
-Ciudad.hasMany(Barrio, { foreignKey: 'id_ciudad', onDelete: 'CASCADE' });
-Barrio.belongsTo(Ciudad, { foreignKey: 'id_ciudad' });
+Comuna.hasMany(Barrio, { foreignKey: 'id_comuna', onDelete: 'CASCADE' });
+Barrio.belongsTo(Comuna, { foreignKey: 'id_comuna' });
 
 module.exports = Barrio;

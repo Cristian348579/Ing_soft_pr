@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { bdMySQL } = require('../database/db_conection');
 const Proveedor = require('./proveedor');
-const Ciudad = require('./ciudad');
+const Comuna = require('./comuna');
 const Barrio = require('./barrio');
 
 const ZonaAtencion = bdMySQL.define('ZonaAtencion', {
@@ -18,12 +18,12 @@ const ZonaAtencion = bdMySQL.define('ZonaAtencion', {
             key: 'id_proveedor'
         }
     },
-    id_ciudad: { 
+    id_comuna: { 
         type: DataTypes.INTEGER, 
         allowNull: false,
         references: {
-            model: Ciudad,
-            key: 'id_ciudad'
+            model: Comuna,
+            key: 'id_comuna'
         }
     },
     id_barrio: { 
@@ -39,13 +39,12 @@ const ZonaAtencion = bdMySQL.define('ZonaAtencion', {
     timestamps: false
 });
 
-
 Proveedor.hasMany(ZonaAtencion, { foreignKey: 'id_proveedor', onDelete: 'CASCADE' });
 ZonaAtencion.belongsTo(Proveedor, { foreignKey: 'id_proveedor' });
 
 
-Ciudad.hasMany(ZonaAtencion, { foreignKey: 'id_ciudad' });
-ZonaAtencion.belongsTo(Ciudad, { foreignKey: 'id_ciudad' });
+Comuna.hasMany(ZonaAtencion, { foreignKey: 'id_comuna' });
+ZonaAtencion.belongsTo(Comuna, { foreignKey: 'id_comuna' });
 
 Barrio.hasMany(ZonaAtencion, { foreignKey: 'id_barrio' });
 ZonaAtencion.belongsTo(Barrio, { foreignKey: 'id_barrio' });

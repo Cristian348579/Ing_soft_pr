@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
+
 const { 
     obtenerPerfilProveedor, 
     actualizarPerfilProveedor, 
@@ -9,15 +10,10 @@ const {
     obtenerDetalleProveedor
 } = require('../controllers/proveedores.controller');
 
-const { validarJWT, esProveedor } = require('../middlewares/validar-jwt'); 
-const { validarCampos } = require('../middlewares/validar-campos');        
+const { validarJWT, esProveedor } = require('../middlewares/validar-jwt');
+const { validarCampos } = require('../middlewares/validar-campos');
 
 const router = Router();
-
-
-router.get('/', listarProveedores);
-
-
 
 router.get('/perfil', [
     validarJWT,
@@ -36,7 +32,7 @@ router.put('/perfil', [
 router.post('/zonas', [
     validarJWT,
     esProveedor,
-    check('id_ciudad', 'El ID de la ciudad es obligatorio y debe ser un número entero').isInt(),
+    check('id_comuna', 'El ID de la comuna es obligatorio y debe ser un número entero').isInt(),
     check('id_barrio', 'El ID del barrio es obligatorio y debe ser un número entero').isInt(),
     validarCampos
 ], registrarZonaAtencion);
@@ -48,7 +44,7 @@ router.delete('/zonas/:id_zona', [
     validarCampos
 ], eliminarZonaAtencion);
 
-
+router.get('/', listarProveedores);
 router.get('/:id', obtenerDetalleProveedor);
 
 module.exports = router;
