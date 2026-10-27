@@ -3,6 +3,7 @@ const Cliente = require('../models/cliente');
 const Comuna = require('../models/comuna');
 const Barrio = require('../models/barrio');
 
+
 const obtenerPerfilCliente = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
 
