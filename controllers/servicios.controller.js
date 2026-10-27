@@ -8,42 +8,34 @@ const Recurso = require('../models/recurso');
 
 const crearServicio = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
-    
-    const { 
-        nombre, 
-        categoria, 
-        descripcion, 
-        duracion_minutos, 
-        precio,
-        estado = 'A'
-    } = req.body;
+    const { nombre, descripcion, duracion_minutos, precio, categoria } = req.body;
 
     try {
         const nuevoServicio = await Servicio.create({
             id_proveedor: id_usuario,
             nombre,
-            categoria,
             descripcion,
-            duracion_minutos,
-            precio,
-            estado
+            duracion_minutos: parseInt(duracion_minutos, 10),
+            precio: parseFloat(precio),
+            categoria,
+            estado: 'A'
         });
 
         res.status(201).json({
-            msg: 'Servicio registrado correctamente en el catálogo',
+            ok: true,
+            msg: 'Servicio creado exitosamente en el catálogo',
             servicio: nuevoServicio
         });
-
     } catch (error) {
-        console.error(error);
+        console.error('Error al registrar servicio:', error);
         res.status(500).json({ msg: 'Error al registrar el servicio' });
     }
 };
 
+// HU-009: Catálogo general público de servicios activos
 const listarServiciosCatalogo = async (req, res) => {
     try {
-        const { categoria, buscar } = req.query;
-
+        const { categoria } = req.query;
         const whereClause = { estado: 'A' };
 
         if (categoria && categoria !== 'Todos') {
@@ -55,12 +47,8 @@ const listarServiciosCatalogo = async (req, res) => {
             include: [
                 {
                     model: Proveedor,
-                    as: 'Proveedor',
                     include: [
-                        {
-                            model: Usuario,
-                            attributes: ['nombre', 'apellido']
-                        },
+                        { model: Usuario, attributes: ['nombre', 'apellido'] },
                         {
                             model: ZonaAtencion,
                             include: [
@@ -90,6 +78,7 @@ const listarServiciosCatalogo = async (req, res) => {
     }
 };
 
+// HU-007: Listar los servicios propios del proveedor autenticado
 const obtenerMisServicios = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
 
@@ -101,6 +90,7 @@ const obtenerMisServicios = async (req, res) => {
 
         res.json({
             ok: true,
+            total: servicios.length,
             servicios
         });
     } catch (error) {
@@ -109,32 +99,32 @@ const obtenerMisServicios = async (req, res) => {
     }
 };
 
+// HU-007: Actualización integral de parámetros del servicio
 const actualizarServicio = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
     const { id } = req.params;
     const { nombre, categoria, descripcion, duracion_minutos, precio, estado } = req.body;
 
     try {
-        const servicio = await Servicio.findOne({
-            where: {
-                id_servicio: id,
-                id_proveedor: id_usuario
-            }
-        });
+        const servicio = await Servicio.findByPk(id);
 
         if (!servicio) {
-            return res.status(404).json({
-                msg: 'Servicio no encontrado o no pertenece a tu catálogo'
-            });
+            return res.status(404).json({ msg: 'Servicio no encontrado en el sistema' });
         }
 
+        // RF-06: Verificación de propiedad del recurso
+        if (servicio.id_proveedor !== id_usuario) {
+            return res.status(403).json({ msg: 'No tienes autorización para modificar este servicio' });
+        }
+
+        // RN-13: Inmutabilidad comercial hacia solicitudes pasadas (el update solo afecta nuevas órdenes)
         await servicio.update({
-            nombre,
-            categoria,
-            descripcion,
-            duracion_minutos: parseInt(duracion_minutos, 10),
-            precio: parseFloat(precio),
-            estado
+            nombre: nombre !== undefined ? nombre : servicio.nombre,
+            categoria: categoria !== undefined ? categoria : servicio.categoria,
+            descripcion: descripcion !== undefined ? descripcion : servicio.descripcion,
+            duracion_minutos: duracion_minutos !== undefined ? parseInt(duracion_minutos, 10) : servicio.duracion_minutos,
+            precio: precio !== undefined ? parseFloat(precio) : servicio.precio,
+            estado: estado !== undefined ? estado : servicio.estado
         });
 
         res.json({
@@ -144,7 +134,36 @@ const actualizarServicio = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al actualizar servicio:', error);
-        res.status(500).json({ msg: 'Error al actualizar el servicio' });
+        res.status(500).json({ msg: 'Error interno al actualizar el servicio' });
+    }
+};
+
+const cambiarEstadoServicio = async (req, res) => {
+    const { id_usuario } = req.usuarioAutenticado;
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    try {
+        const servicio = await Servicio.findByPk(id);
+
+        if (!servicio) {
+            return res.status(404).json({ msg: 'Servicio no encontrado en el sistema' });
+        }
+
+        if (servicio.id_proveedor !== id_usuario) {
+            return res.status(403).json({ msg: 'No tienes autorización para modificar este servicio' });
+        }
+
+        await servicio.update({ estado });
+
+        res.json({
+            ok: true,
+            msg: `Servicio marcado como ${estado === 'A' ? 'Activo' : 'Inactivo'} exitosamente`,
+            servicio
+        });
+    } catch (error) {
+        console.error('Error al cambiar estado del servicio:', error);
+        res.status(500).json({ msg: 'Error interno al modificar el estado del servicio' });
     }
 };
 
@@ -152,5 +171,6 @@ module.exports = {
     crearServicio,
     listarServiciosCatalogo,
     obtenerMisServicios,
-    actualizarServicio
+    actualizarServicio,
+    cambiarEstadoServicio
 };
