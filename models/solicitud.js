@@ -3,6 +3,7 @@ const { bdMySQL } = require('../database/db_conection');
 const Cliente = require('./cliente');
 const Proveedor = require('./proveedor');
 const Servicio = require('./servicio');
+const Barrio = require('./barrio');
 
 const Solicitud = bdMySQL.define('Solicitud', {
     id_solicitud: {
@@ -34,7 +35,14 @@ const Solicitud = bdMySQL.define('Solicitud', {
             key: 'id_servicio'
         }
     },
-    // RN-13: Campos comerciales congelados
+    id_barrio: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Barrio,
+            key: 'id_barrio'
+        }
+    },
     nombre_servicio_c: {
         type: DataTypes.STRING(150),
         allowNull: false
@@ -74,7 +82,7 @@ const Solicitud = bdMySQL.define('Solicitud', {
     estado: {
         type: DataTypes.CHAR(1),
         allowNull: false,
-        defaultValue: 'P', // P: Pendiente, A: Aceptada, S: Sugerida, R: Rechazada, C: Cancelada, F: Finalizada
+        defaultValue: 'P',
         validate: {
             isIn: [['P', 'A', 'S', 'R', 'C', 'F']]
         }
@@ -104,5 +112,8 @@ Solicitud.belongsTo(Proveedor, { foreignKey: 'id_proveedor', as: 'proveedor' });
 
 Servicio.hasMany(Solicitud, { foreignKey: 'id_servicio', as: 'solicitudes' });
 Solicitud.belongsTo(Servicio, { foreignKey: 'id_servicio', as: 'servicio' });
+
+Barrio.hasMany(Solicitud, { foreignKey: 'id_barrio', as: 'solicitudes' });
+Solicitud.belongsTo(Barrio, { foreignKey: 'id_barrio', as: 'barrio' });
 
 module.exports = Solicitud;
