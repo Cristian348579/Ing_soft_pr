@@ -5,6 +5,10 @@ const Comuna = require('../models/comuna');
 const Barrio = require('../models/barrio');
 const Servicio = require('../models/servicio');
 const Recurso = require('../models/recurso');
+const Disponibilidad = require('../models/disponibilidad');
+const PeriodoNoDisponible = require('../models/periodoNoDisponible');
+
+const ORDEN_SEMANA = { LU: 1, MA: 2, MI: 3, JU: 4, VI: 5, SA: 6, DO: 7 };
 
 const obtenerPerfilProveedor = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
@@ -209,6 +213,7 @@ const obtenerDetalleProveedor = async (req, res) => {
             return res.status(404).json({ msg: 'Proveedor no encontrado' });
         }
 
+        // Catálogo de servicios activos ('A')
         const servicios = await Servicio.findAll({
             where: { 
                 id_proveedor: id,
@@ -222,6 +227,17 @@ const obtenerDetalleProveedor = async (req, res) => {
                 }
             ],
             order: [['id_servicio', 'DESC']]
+        });
+
+        const franjas = await Disponibilidad.findAll({
+            where: { id_proveedor: id },
+            order: [['hora_inicio', 'ASC']]
+        });
+        franjas.sort((a, b) => (ORDEN_SEMANA[a.dia] || 0) - (ORDEN_SEMANA[b.dia] || 0));
+
+        const periodos = await PeriodoNoDisponible.findAll({
+            where: { id_proveedor: id },
+            order: [['fecha_inicio', 'ASC']]
         });
 
         res.json({
@@ -239,7 +255,9 @@ const obtenerDetalleProveedor = async (req, res) => {
                     comuna: z.Barrio?.Comuna?.nombre
                 }))
             },
-            servicios
+            servicios,
+            disponibilidad: franjas,
+            periodos_no_disponibles: periodos
         });
 
     } catch (error) {
