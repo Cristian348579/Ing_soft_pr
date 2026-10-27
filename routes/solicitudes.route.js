@@ -1,10 +1,26 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
-const { crearSolicitud } = require('../controllers/solicitudes.controller');
+const { 
+    crearSolicitud, 
+    obtenerMisSolicitudes, 
+    obtenerDetalleSolicitudCliente 
+} = require('../controllers/solicitudes.controller');
 const { validarJWT, esCliente } = require('../middlewares/validar-jwt');
 const { validarCampos } = require('../middlewares/validar-campos');
 
 const router = Router();
+
+router.get('/mias', [
+    validarJWT,
+    esCliente
+], obtenerMisSolicitudes);
+
+router.get('/:id', [
+    validarJWT,
+    esCliente,
+    check('id', 'El ID de la solicitud debe ser entero').isInt(),
+    validarCampos
+], obtenerDetalleSolicitudCliente);
 
 router.post('/', [
     validarJWT,

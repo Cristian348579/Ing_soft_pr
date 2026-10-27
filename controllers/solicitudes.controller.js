@@ -1,9 +1,11 @@
 const Solicitud = require('../models/solicitud');
 const Servicio = require('../models/servicio');
-const Disponibilidad = require('../models/disponibilidad');
-const PeriodoNoDisponible = require('../models/periodoNoDisponible');
+const Proveedor = require('../models/proveedor');
+const Usuario = require('../models/usuario');
 const Barrio = require('../models/barrio');
 const Comuna = require('../models/comuna');
+const Disponibilidad = require('../models/disponibilidad');
+const PeriodoNoDisponible = require('../models/periodoNoDisponible');
 
 const convertirAMinutos = (horaStr) => {
     if (!horaStr) return 0;
@@ -69,6 +71,7 @@ const crearSolicitud = async (req, res) => {
                 msg: 'El profesional no se encuentra disponible en la fecha seleccionada (periodo de descanso o bloqueo)'
             });
         }
+
         const diasSemanaMap = ['DO', 'LU', 'MA', 'MI', 'JU', 'VI', 'SA'];
         const diaCod = diasSemanaMap[fechaSolicitada.getDay()];
 
@@ -151,6 +154,102 @@ const crearSolicitud = async (req, res) => {
     }
 };
 
+
+const obtenerMisSolicitudes = async (req, res) => {
+    const { id_usuario: id_cliente } = req.usuarioAutenticado;
+    const { estado } = req.query;
+
+    try {
+        const whereClause = { id_cliente };
+        if (estado && estado !== 'TODOS') {
+            whereClause.estado = estado;
+        }
+
+        const solicitudes = await Solicitud.findAll({
+            where: whereClause,
+            include: [
+                {
+                    model: Proveedor,
+                    as: 'proveedor',
+                    include: [
+                        {
+                            model: Usuario,
+                            attributes: ['id_usuario', 'nombre', 'apellido', 'correo_electronico']
+                        }
+                    ]
+                },
+                {
+                    model: Barrio,
+                    as: 'barrio',
+                    attributes: ['id_barrio', 'nombre'],
+                    include: [
+                        { model: Comuna, attributes: ['id_comuna', 'nombre'] }
+                    ]
+                }
+            ],
+            order: [['fecha_creacion', 'DESC']]
+        });
+
+        res.json({
+            ok: true,
+            total: solicitudes.length,
+            solicitudes
+        });
+    } catch (error) {
+        console.error('Error al consultar solicitudes del cliente:', error);
+        res.status(500).json({ msg: 'Error al consultar tus solicitudes' });
+    }
+};
+
+const obtenerDetalleSolicitudCliente = async (req, res) => {
+    const { id_usuario: id_cliente } = req.usuarioAutenticado;
+    const { id } = req.params;
+
+    try {
+        const solicitud = await Solicitud.findByPk(id, {
+            include: [
+                {
+                    model: Proveedor,
+                    as: 'proveedor',
+                    include: [
+                        {
+                            model: Usuario,
+                            attributes: ['id_usuario', 'nombre', 'apellido', 'correo_electronico']
+                        }
+                    ]
+                },
+                {
+                    model: Barrio,
+                    as: 'barrio',
+                    attributes: ['id_barrio', 'nombre'],
+                    include: [
+                        { model: Comuna, attributes: ['id_comuna', 'nombre'] }
+                    ]
+                }
+            ]
+        });
+
+        if (!solicitud) {
+            return res.status(404).json({ msg: 'Solicitud no encontrada' });
+        }
+
+       
+        if (solicitud.id_cliente !== id_cliente) {
+            return res.status(403).json({ msg: 'No tienes autorización para consultar esta solicitud' });
+        }
+
+        res.json({
+            ok: true,
+            solicitud
+        });
+    } catch (error) {
+        console.error('Error al consultar detalle de solicitud:', error);
+        res.status(500).json({ msg: 'Error interno al consultar la solicitud' });
+    }
+};
+
 module.exports = {
-    crearSolicitud
+    crearSolicitud,
+    obtenerMisSolicitudes,
+    obtenerDetalleSolicitudCliente
 };
