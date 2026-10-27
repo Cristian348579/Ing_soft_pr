@@ -21,7 +21,6 @@ const registrarUsuario = async (req, res) => {
     } = req.body;
     
     const rolFormateado = (rol === 'cliente') ? 'C' : (rol === 'proveedor') ? 'P' : rol;
-
     const t = await bdMySQL.transaction();
 
     try {
@@ -32,9 +31,7 @@ const registrarUsuario = async (req, res) => {
         }
 
         if (rolFormateado === 'C') {
-            const barrioValido = await Barrio.findOne({
-                where: { id_barrio, id_comuna }
-            });
+            const barrioValido = await Barrio.findOne({ where: { id_barrio, id_comuna } });
             if (!barrioValido) {
                 await t.rollback();
                 return res.status(400).json({ msg: 'El barrio seleccionado no pertenece a la comuna indicada' });
@@ -60,15 +57,11 @@ const registrarUsuario = async (req, res) => {
                 direccion,
                 informacion_complementaria: informacion_complementaria || null
             }, { transaction: t });
-
         } else if (rolFormateado === 'P') {
             await Proveedor.create({ 
                 id_proveedor: usuario.id_usuario, 
                 descripcion_perfil 
             }, { transaction: t });
-
-        } else {
-            throw new Error('Rol inválido');
         }
 
         await t.commit();
@@ -83,7 +76,6 @@ const registrarUsuario = async (req, res) => {
                 apellido: usuario.apellido
             }
         });
-
     } catch (error) {
         await t.rollback();
         console.error('Error al registrar usuario:', error);
@@ -107,6 +99,14 @@ const login = async (req, res) => {
 
         const token = await generarJWT(usuario.id_usuario, usuario.rol);
 
+        // Envío del JWT encapsulado en Cookie HttpOnly
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 4 * 60 * 60 * 1000 // 4 horas
+        });
+
         res.json({
             ok: true,
             msg: 'Inicio de sesión exitoso',
@@ -116,16 +116,52 @@ const login = async (req, res) => {
                 nombre: usuario.nombre,
                 apellido: usuario.apellido
             },
-            token
+            token // Se mantiene en el JSON para compatibilidad con Postman
         });
-
     } catch (error) {
         console.error('Error en login:', error);
         res.status(500).json({ msg: 'Hable con el administrador' });
     }
 };
 
+// HU-002: Cierre de sesión seguro invalidando la cookie
+const logout = (req, res) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    });
+    res.json({
+        ok: true,
+        msg: 'Sesión cerrada exitosamente'
+    });
+};
+
+// HU-002: Endpoint para verificar sesión activa al cargar React
+const verificarSesion = async (req, res) => {
+    try {
+        const { id_usuario } = req.usuarioAutenticado;
+        const usuario = await Usuario.findByPk(id_usuario, {
+            attributes: ['id_usuario', 'nombre', 'apellido', 'correo_electronico', 'rol']
+        });
+
+        if (!usuario) {
+            return res.status(404).json({ ok: false, msg: 'Usuario no encontrado' });
+        }
+
+        res.json({
+            ok: true,
+            usuario
+        });
+    } catch (error) {
+        console.error('Error al verificar sesión:', error);
+        res.status(500).json({ ok: false, msg: 'Error al verificar sesión' });
+    }
+};
+
 module.exports = {
     registrarUsuario,
-    login
+    login,
+    logout,
+    verificarSesion
 };

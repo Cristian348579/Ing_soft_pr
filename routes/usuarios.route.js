@@ -1,7 +1,13 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
-const { registrarUsuario, login } = require('../controllers/usuarios.controller');
+const { 
+    registrarUsuario, 
+    login, 
+    logout, 
+    verificarSesion 
+} = require('../controllers/usuarios.controller');
 const { validarCampos } = require('../middlewares/validar-campos');
+const { validarJWT } = require('../middlewares/validar-jwt');
 
 const router = Router();
 
@@ -13,10 +19,10 @@ router.post('/registro', [
     check('rol', 'El rol no es válido').isIn(['C', 'P', 'cliente', 'proveedor']),
     check('id_comuna')
         .if((value, { req }) => req.body.rol === 'C' || req.body.rol === 'cliente')
-        .isInt().withMessage('El ID de la comuna es obligatorio para el cliente y debe ser numérico'),
+        .isInt().withMessage('El ID de la comuna es obligatorio para el cliente'),
     check('id_barrio')
         .if((value, { req }) => req.body.rol === 'C' || req.body.rol === 'cliente')
-        .isInt().withMessage('El ID del barrio es obligatorio para el cliente y debe ser numérico'),
+        .isInt().withMessage('El ID del barrio es obligatorio para el cliente'),
     check('direccion')
         .if((value, { req }) => req.body.rol === 'C' || req.body.rol === 'cliente')
         .not().isEmpty().withMessage('La dirección es obligatoria para el cliente'),
@@ -31,5 +37,9 @@ router.post('/login', [
     check('contrasena', 'La contraseña es obligatoria').not().isEmpty(),
     validarCampos
 ], login);
+
+
+router.post('/logout', logout);
+router.get('/verificar-sesion', [validarJWT], verificarSesion);
 
 module.exports = router;
