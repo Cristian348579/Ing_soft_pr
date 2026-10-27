@@ -52,9 +52,13 @@ const listarServiciosCatalogo = async (req, res) => {
                         { model: Usuario, attributes: ['nombre', 'apellido'] },
                         {
                             model: ZonaAtencion,
+                            attributes: ['id_zona', 'id_barrio'],
                             include: [
-                                { model: Comuna, attributes: ['nombre'] },
-                                { model: Barrio, attributes: ['nombre'] }
+                                {
+                                    model: Barrio,
+                                    attributes: ['id_barrio', 'nombre'],
+                                    include: [{ model: Comuna, attributes: ['id_comuna', 'nombre'] }]
+                                }
                             ]
                         }
                     ]

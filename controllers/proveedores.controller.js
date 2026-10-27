@@ -18,11 +18,15 @@ const obtenerPerfilProveedor = async (req, res) => {
                 attributes: ['descripcion_perfil'],
                 include: [{
                     model: ZonaAtencion,
-                    attributes: ['id_zona', 'id_comuna', 'id_barrio'],
-                    include: [
-                        { model: Comuna, attributes: ['nombre'] },
-                        { model: Barrio, attributes: ['nombre'] }
-                    ]
+                    attributes: ['id_zona', 'id_barrio'],
+                    include: [{
+                        model: Barrio,
+                        attributes: ['id_barrio', 'nombre', 'id_comuna'],
+                        include: [{
+                            model: Comuna,
+                            attributes: ['id_comuna', 'nombre']
+                        }]
+                    }]
                 }]
             }]
         });
@@ -75,14 +79,12 @@ const actualizarPerfilProveedor = async (req, res) => {
 
 const registrarZonaAtencion = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
-    const { id_comuna, id_barrio } = req.body;
+    const { id_barrio } = req.body;
 
     try {
-        const barrioValido = await Barrio.findOne({
-            where: { id_barrio, id_comuna }
-        });
+        const barrioValido = await Barrio.findByPk(id_barrio);
         if (!barrioValido) {
-            return res.status(400).json({ msg: 'El barrio seleccionado no pertenece a la comuna indicada' });
+            return res.status(400).json({ msg: 'El barrio seleccionado no existe en el sistema' });
         }
 
         const existe = await ZonaAtencion.findOne({
@@ -98,7 +100,6 @@ const registrarZonaAtencion = async (req, res) => {
 
         const nuevaZona = await ZonaAtencion.create({
             id_proveedor: id_usuario,
-            id_comuna,
             id_barrio
         });
 
@@ -144,11 +145,12 @@ const listarProveedores = async (req, res) => {
                 },
                 {
                     model: ZonaAtencion,
-                    attributes: ['id_zona', 'id_comuna', 'id_barrio'],
-                    include: [
-                        { model: Comuna, attributes: ['nombre'] },
-                        { model: Barrio, attributes: ['nombre'] }
-                    ]
+                    attributes: ['id_zona', 'id_barrio'],
+                    include: [{
+                        model: Barrio,
+                        attributes: ['id_barrio', 'nombre'],
+                        include: [{ model: Comuna, attributes: ['id_comuna', 'nombre'] }]
+                    }]
                 }
             ]
         });
@@ -157,12 +159,12 @@ const listarProveedores = async (req, res) => {
             id_proveedor: p.id_proveedor,
             nombre: `${p.Usuario.nombre} ${p.Usuario.apellido}`,
             descripcion_perfil: p.descripcion_perfil,
-            zonas: p.ZonaAtencions.map(z => ({
+            zonas: (p.ZonaAtencions || []).map(z => ({
                 id_zona: z.id_zona,
-                id_comuna: z.id_comuna,
-                comuna: z.Comuna?.nombre,
                 id_barrio: z.id_barrio,
-                barrio: z.Barrio?.nombre
+                barrio: z.Barrio?.nombre,
+                id_comuna: z.Barrio?.Comuna?.id_comuna,
+                comuna: z.Barrio?.Comuna?.nombre
             }))
         }));
 
@@ -191,11 +193,12 @@ const obtenerDetalleProveedor = async (req, res) => {
                     include: [
                         {
                             model: ZonaAtencion,
-                            attributes: ['id_zona', 'id_comuna', 'id_barrio'],
-                            include: [
-                                { model: Comuna, attributes: ['nombre'] },
-                                { model: Barrio, attributes: ['nombre'] }
-                            ]
+                            attributes: ['id_zona', 'id_barrio'],
+                            include: [{
+                                model: Barrio,
+                                attributes: ['id_barrio', 'nombre'],
+                                include: [{ model: Comuna, attributes: ['id_comuna', 'nombre'] }]
+                            }]
                         }
                     ]
                 }
@@ -228,13 +231,13 @@ const obtenerDetalleProveedor = async (req, res) => {
                 nombre: `${usuarioProveedor.nombre} ${usuarioProveedor.apellido}`,
                 correo_electronico: usuarioProveedor.correo_electronico,
                 descripcion_perfil: usuarioProveedor.Proveedor?.descripcion_perfil || '',
-                zonas: usuarioProveedor.Proveedor?.ZonaAtencions?.map(z => ({
+                zonas: (usuarioProveedor.Proveedor?.ZonaAtencions || []).map(z => ({
                     id_zona: z.id_zona,
-                    id_comuna: z.id_comuna,
-                    comuna: z.Comuna?.nombre,
                     id_barrio: z.id_barrio,
-                    barrio: z.Barrio?.nombre
-                })) || []
+                    barrio: z.Barrio?.nombre,
+                    id_comuna: z.Barrio?.Comuna?.id_comuna,
+                    comuna: z.Barrio?.Comuna?.nombre
+                }))
             },
             servicios
         });

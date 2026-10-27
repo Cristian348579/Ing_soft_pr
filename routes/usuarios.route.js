@@ -17,9 +17,6 @@ router.post('/registro', [
     check('correo_electronico', 'El correo no es válido').isEmail(),
     check('contrasena', 'La contraseña debe tener al menos 6 caracteres').isLength({ min: 6 }),
     check('rol', 'El rol no es válido').isIn(['C', 'P', 'cliente', 'proveedor']),
-    check('id_comuna')
-        .if((value, { req }) => req.body.rol === 'C' || req.body.rol === 'cliente')
-        .isInt().withMessage('El ID de la comuna es obligatorio para el cliente'),
     check('id_barrio')
         .if((value, { req }) => req.body.rol === 'C' || req.body.rol === 'cliente')
         .isInt().withMessage('El ID del barrio es obligatorio para el cliente'),

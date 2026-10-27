@@ -32,7 +32,6 @@ router.put('/perfil', [
 router.post('/zonas', [
     validarJWT,
     esProveedor,
-    check('id_comuna', 'El ID de la comuna es obligatorio y debe ser un número entero').isInt(),
     check('id_barrio', 'El ID del barrio es obligatorio y debe ser un número entero').isInt(),
     validarCampos
 ], registrarZonaAtencion);
