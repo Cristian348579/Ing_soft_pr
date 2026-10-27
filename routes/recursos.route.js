@@ -1,23 +1,30 @@
 const { Router } = require('express');
 const multer = require('multer');
-const { validarJWT } = require('../middlewares/validar-jwt');
-const { subirRecurso, listarRecursos } = require('../controllers/recursos.controller');
+const { validarJWT, esProveedor } = require('../middlewares/validar-jwt');
+const { listarRecursos, subirRecurso, eliminarRecurso } = require('../controllers/recursos.controller');
 
-// Configuración de Multer para mantener el archivo en memoria (Buffer)
+// Buffer en memoria para delegar persistencia a ImageKit (máx 25 MB)
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 25 * 1024 * 1024 } // 25 MB máximo
+    limits: { fileSize: 25 * 1024 * 1024 }
 });
 
 const router = Router({ mergeParams: true });
 
-// Subir recurso a un servicio (Protegido por token y rol de proveedor)
+// GET /api/servicios/:id/recursos
+router.get('/', listarRecursos);
+
+// POST /api/servicios/:id/recursos (Multipart)
 router.post('/', [
     validarJWT,
+    esProveedor,
     upload.single('recurso')
 ], subirRecurso);
 
-// Consultar recursos de un servicio
-router.get('/', listarRecursos);
+// DELETE /api/servicios/:id/recursos/:id_recurso
+router.delete('/:id_recurso', [
+    validarJWT,
+    esProveedor
+], eliminarRecurso);
 
 module.exports = router;

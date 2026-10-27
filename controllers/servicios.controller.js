@@ -5,6 +5,7 @@ const ZonaAtencion = require('../models/zonaAtencion');
 const Comuna = require('../models/comuna');
 const Barrio = require('../models/barrio');
 const Recurso = require('../models/recurso');
+const InsumoEquipo = require('../models/insumoEquipo');
 
 const crearServicio = async (req, res) => {
     const { id_usuario } = req.usuarioAutenticado;
@@ -61,7 +62,12 @@ const listarServiciosCatalogo = async (req, res) => {
                 {
                     model: Recurso,
                     as: 'recursos',
-                    attributes: ['url_archivo', 'tipo', 'es_miniatura']
+                    attributes: ['id_recurso', 'url_archivo', 'tipo', 'es_miniatura']
+                },
+                {
+                    model: InsumoEquipo,
+                    as: 'insumos',
+                    attributes: ['id_insumo', 'nombre']
                 }
             ],
             order: [['id_servicio', 'DESC']]
@@ -85,6 +91,18 @@ const obtenerMisServicios = async (req, res) => {
     try {
         const servicios = await Servicio.findAll({
             where: { id_proveedor: id_usuario },
+            include: [
+                {
+                    model: Recurso,
+                    as: 'recursos',
+                    attributes: ['id_recurso', 'url_archivo', 'tipo', 'es_miniatura', 'file_id']
+                },
+                {
+                    model: InsumoEquipo,
+                    as: 'insumos',
+                    attributes: ['id_insumo', 'nombre']
+                }
+            ],
             order: [['id_servicio', 'DESC']]
         });
 
